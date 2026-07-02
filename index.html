@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>スマホ料金シミュレーター</title>
+    <style>
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f0f2f5;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+        h1 {
+            text-align: center;
+            font-size: 22px;
+            color: #111;
+            margin-bottom: 25px;
+        }
+        .section {
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        select, input[type="range"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+        .checkbox-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 5px;
+        }
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            font-weight: normal;
+            cursor: pointer;
+        }
+        .checkbox-label input {
+            margin-right: 10px;
+            transform: scale(1.2);
+        }
+        .giga-value {
+            font-size: 18px;
+            color: #007bff;
+            font-weight: bold;
+            text-align: center;
+            margin-top: 5px;
+        }
+        button {
+            width: 100%;
+            padding: 14px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        button:hover {
+            background-color: #218838;
+        }
+        .results {
+            margin-top: 25px;
+            display: none;
+        }
+        .results h2 {
+            font-size: 18px;
+            margin-bottom: 15px;
+        }
+        .result-card {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 15px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            background: #f8f9fa;
+            border-left: 5px solid #ccc;
+        }
+        /* 各ブランドのイメージカラー（仮） */
+        .docomo { border-left-color: #cc0033; }
+        .au { border-left-color: #ff6600; }
+        .softbank { border-left-color: #999999; }
+        .ahamo { border-left-color: #000000; }
+        .uq { border-left-color: #ff0066; }
+        .ymobile { border-left-color: #ff0033; }
+
+        .brand-name {
+            font-weight: bold;
+            font-size: 16px;
+        }
+        .price {
+            font-size: 18px;
+            font-weight: bold;
+            color: #dc3545;
+        }
+        .details {
+            font-size: 11px;
+            color: #666;
+            margin-top: 2px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>📱 スマホ料金一括シミュレーター</h1>
+    
+    <div class="section">
+        <label for="giga">1ヶ月に必要なデータ通信量 (ギガ数)</label>
+        <input type="range" id="giga" min="1" max="50" value="4" oninput="updateGigaText(this.value)">
+        <div class="giga-value"><span id="giga-val">4</span> GB</div>
+    </div>
+    
+    <div class="section">
+        <label for="call">通話オプション（かけ放題）</label>
+        <select id="call">
+            <option value="none">なし（従量制: 22円/30秒）</option>
+            <option value="5min">5分かけ放題（定額）</option>
+            <option value="unlimited">24時間いつでもかけ放題</option>
+        </select>
+    </div>
+    
+    <div class="section">
+        <label>適用可能な割引（チェックを入れてください）</label>
+        <div class="checkbox-group">
+            <label class="checkbox-label"><input type="checkbox" id="discount-family"> 家族割引（3人以上を想定）</label>
+            <label class="checkbox-label"><input type="checkbox" id="discount-net"> 自宅セット割 / 光回線セット割</label>
+            <label class="checkbox-label"><input type="checkbox" id="discount-card"> 指定クレジットカード決済割</label>
+        </div>
+    </div>
+    
+    <button onclick="calculateRates()">料金をシミュレーションする</button>
+    
+    <div class="results" id="results-area">
+        <h2>📊 各社のおすすめプラン料金（月額/税込）</h2>
+        <div id="results-list"></div>
+    </div>
+</div>
+
+<script>
+    // ギガ数のスライダー表示用
+    function updateGigaText(val) {
+        document.getElementById('giga-val').innerText = val;
+    }
+
+    function calculateRates() {
+        // ユーザーの入力値を取得
+        const giga = parseInt(document.getElementById('giga').value);
+        const callOption = document.getElementById('call').value;
+        const hasFamily = document.getElementById('discount-family').checked;
+        const hasNet = document.getElementById('discount-net').checked;
+        const hasCard = document.getElementById('discount-card').checked;
+
+        // 結果を格納する配列
+        let results = [];
+
+        /* ====================================================
+           💡 料金計算ロジック（※金額は調整用のダミー・仮設定です）
+           細かい条件や正確な金額は、後からここを書き換えてください。
+           ==================================================== */
+
+        // 1. ドコモ (eximo or イルモを想定)
+        let docomoBase = (giga <= 3) ? 4378 : 7315; // ギガ数でベースプランの分岐例
+        let docomoDiscount = 0;
+        if (hasFamily) docomoDiscount += 1100;
+        if (hasNet) docomoDiscount += 1100;
+        if (hasCard) docomoDiscount += 187;
+        let docomoCall = (callOption === '5min') ? 880 : (callOption === 'unlimited' ? 1980 : 0);
+        results.push({
+            name: 'ドコモ (eximo等)',
+            price: docomoBase - docomoDiscount + docomoCall,
+            class: 'docomo',
+            detail: `基本: ${docomoBase}円 / 割引: -${docomoDiscount}円 / 通話: +${docomoCall}円`
+        });
+
+        // 2. au (使い放題MAX or ミニミニ等を想定)
+        let auBase = (giga <= 4) ? 4928 : 7238;
+        let auDiscount = 0;
+        if (hasFamily) auDiscount += 1100;
+        if (hasNet) auDiscount += 1100;
+        if (hasCard) auDiscount += 110;
+        let auCall = (callOption === '5min') ? 880 : (callOption === 'unlimited' ? 1980 : 0);
+        results.push({
+            name: 'au (使い放題MAX等)',
+            price: auBase - auDiscount + auCall,
+            class: 'au',
+            detail: `基本: ${auBase}円 / 割引: -${auDiscount}円 / 通話: +${auCall}円`
+        });
+
+        // 3. ソフトバンク (ペイトク or ミニフィット等を想定)
+        let sbBase = (giga <= 2) ? 5445 : 7425;
+        let sbDiscount = 0;
+        if (hasFamily) sbDiscount += 1210;
+        if (hasNet) sbDiscount += 1100;
+        if (hasCard) sbDiscount += 110;
+        let sbCall = (callOption === '5min') ? 880 : (callOption === 'unlimited' ? 1980 : 0);
+        results.push({
+            name: 'ソフトバンク',
+            price: sbBase - sbDiscount + sbCall,
+            class: 'softbank',
+            detail: `基本: ${sbBase}円 / 割引: -${sbDiscount}円 / 通話: +${sbCall}円`
+        });
+
+        // 4. ahamo (基本20GB、大盛り100GB。家族割やネット割は対象外のフロー)
+        let ahamoBase = (giga <= 20) ? 2970 : 4950; 
+        // ahamoは最初から5分通話無料が含まれている前提のロジック例
+        let ahamoCall = (callOption === 'unlimited') ? 1100 : 0; 
+        results.push({
+            name: 'ahamo',
+            price: ahamoBase + ahamoCall,
+            class: 'ahamo',
+            detail: `基本(5分無料込): ${ahamoBase}円 / 24時間かけ放題化: +${ahamoCall}円 (※家族・ネット割対象外)`
+        });
+
+        // 5. UQモバイル (トクトクプラン・ミニミニプラン等を想定)
+        let uqBase = (giga <= 4) ? 2365 : 3465;
+        let uqDiscount = 0;
+        if (hasNet) uqDiscount += 1100; // 自宅セット割
+        if (hasCard) uqDiscount += 187;  // 家族割と重複しない等のルールは後日設定
+        let uqCall = (callOption === '5min') ? 880 : (callOption === 'unlimited' ? 1980 : 0);
+        results.push({
+            name: 'UQモバイル',
+            price: uqBase - uqDiscount + uqCall,
+            class: 'uq',
+            detail: `基本: ${uqBase}円 / 割引: -${uqDiscount}円 / 通話: +${uqCall}円`
+        });
+
+        // 6. Y!mobile (シンプル2 S/M/L等を想定)
+        let ymBase = (giga <= 4) ? 2365 : (giga <= 20 ? 4015 : 5115);
+        let ymDiscount = 0;
+        if (hasFamily) {
+            ymDiscount += 1100; // 家族割（2回線目以降を想定）
+        } else if (hasNet) {
+            ymDiscount += 1650; // おうち割光セット（家族割とは重複しない仕様が多いですが一旦独立計算）
+        }
+        if (hasCard) ymDiscount += 187;
+        let ymCall = (callOption === '5min') ? 880 : (callOption === 'unlimited' ? 1980 : 0);
+        results.push({
+            name: 'Y!mobile (ワイモバイル)',
+            price: ymBase - ymDiscount + ymCall,
+            class: 'ymobile',
+            detail: `基本: ${ymBase}円 / 割引: -${ymDiscount}円 / 通話: +${ymCall}円`
+        });
+
+        // 料金の安い順に並び替え
+        results.sort((a, b) => a.price - b.price);
+
+        // 結果画面の描画
+        const resultsList = document.getElementById('results-list');
+        resultsList.innerHTML = '';
+
+        results.forEach(item => {
+            const card = document.createElement('div');
+            card.className = `result-card ${item.class}`;
+            card.innerHTML = `
+                <div>
+                    <div class="brand-name">${item.name}</div>
+                    <div class="details">${item.detail}</div>
+                </div>
+                <div class="price">¥${item.price.toLocaleString()}</div>
+            `;
+            resultsList.appendChild(card);
+        });
+
+        // 結果エリアを表示
+        document.getElementById('results-area').style.display = 'block';
+    }
+</script>
+
+</body>
+</html>
