@@ -101,7 +101,6 @@
             background: #f8f9fa;
             border-left: 5px solid #ccc;
         }
-        /* 各ブランドのイメージカラー（仮） */
         .docomo { border-left-color: #cc0033; }
         .au { border-left-color: #ff6600; }
         .softbank { border-left-color: #999999; }
@@ -113,6 +112,23 @@
             font-weight: bold;
             font-size: 16px;
         }
+        .recommend-tag {
+            display: inline-block;
+            background-color: #f0f0f0;
+            color: #333;
+            font-size: 11px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin-top: 4px;
+            font-weight: bold;
+        }
+        .docomo .recommend-tag { background-color: #ffeef0; color: #cc0033; }
+        .ahamo .recommend-tag { background-color: #e6f7ff; color: #0050b3; }
+        .au .recommend-tag { background-color: #fff2e6; color: #ff6600; }
+        .uq .recommend-tag { background-color: #fff0f5; color: #ff0066; }
+        .softbank .recommend-tag { background-color: #f5f5f5; color: #666666; }
+        .ymobile .recommend-tag { background-color: #ffebeb; color: #ff0033; }
+
         .price {
             font-size: 18px;
             font-weight: bold;
@@ -132,8 +148,8 @@
     
     <div class="section">
         <label for="giga">1ヶ月に必要なデータ通信量 (ギガ数)</label>
-        <input type="range" id="giga" min="1" max="50" value="4" oninput="updateGigaText(this.value)">
-        <div class="giga-value"><span id="giga-val">4</span> GB</div>
+        <input type="range" id="giga" min="1" max="120" value="20" oninput="updateGigaText(this.value)">
+        <div class="giga-value"><span id="giga-val">20</span> GB</div>
     </div>
     
     <div class="section">
@@ -146,11 +162,33 @@
     </div>
     
     <div class="section">
-        <label>適用可能な割引（チェックを入れてください）</label>
-        <div class="checkbox-group">
-            <label class="checkbox-label"><input type="checkbox" id="discount-family"> 家族割引（3人以上を想定）</label>
-            <label class="checkbox-label"><input type="checkbox" id="discount-net"> 自宅セット割 / 光回線セット割</label>
-            <label class="checkbox-label"><input type="checkbox" id="discount-card"> 指定クレジットカード決済割</label>
+        <label>適用可能な割引条件</label>
+        
+        <div style="margin-top: 10px;">
+            <label style="font-weight: normal; font-size: 13px;">👥 家族の回線数（対象プランに適用）</label>
+            <select id="family-lines">
+                <option value="1">1回線（単身・家族割なし）</option>
+                <option value="2">2回線</option>
+                <option value="3">3回線以上</option>
+            </select>
+        </div>
+
+        <div style="margin-top: 10px;">
+            <label style="font-weight: normal; font-size: 13px;">💳 クレジットカード決済</label>
+            <select id="card-type">
+                <option value="none">なし（その他の決済）</option>
+                <option value="d-gold">dカード GOLD</option>
+                <option value="d-silver">dカード SILVER</option>
+                <option value="au-pay">au PAY カード</option>
+                <option value="paypay-gold">PayPayカード GOLD</option>
+                <option value="paypay-normal">PayPayカード（一般）</option>
+                <option value="other-brand">他社の指定カード</option>
+            </select>
+        </div>
+
+        <div class="checkbox-group" style="margin-top: 15px;">
+            <label class="checkbox-label"><input type="checkbox" id="discount-net"> 🏠 自宅のネット回線セット割（各社の光割など）</label>
+            <label class="checkbox-label"><input type="checkbox" id="discount-denki"> ⚡ でんき割</label>
         </div>
     </div>
     
@@ -163,131 +201,185 @@
 </div>
 
 <script>
-    // ギガ数のスライダー表示用
     function updateGigaText(val) {
         document.getElementById('giga-val').innerText = val;
     }
 
     function calculateRates() {
-        // ユーザーの入力値を取得
         const giga = parseInt(document.getElementById('giga').value);
         const callOption = document.getElementById('call').value;
-        const hasFamily = document.getElementById('discount-family').checked;
+        const familyLines = parseInt(document.getElementById('family-lines').value);
+        const cardType = document.getElementById('card-type').value;
         const hasNet = document.getElementById('discount-net').checked;
-        const hasCard = document.getElementById('discount-card').checked;
+        const hasDenki = document.getElementById('discount-denki').checked;
 
-        // 結果を格納する配列
         let results = [];
 
         /* ====================================================
-           💡 料金計算ロジック（※金額は調整用のダミー・仮設定です）
-           細かい条件や正確な金額は、後からここを書き換えてください。
+           💡 1. ドコモ
            ==================================================== */
-
-        // 1. ドコモ (eximo or イルモを想定)
-        let docomoBase = (giga <= 3) ? 4378 : 7315; // ギガ数でベースプランの分岐例
+        let docomoPlanName = '';
+        let docomoBase = 0;
         let docomoDiscount = 0;
-        if (hasFamily) docomoDiscount += 1100;
-        if (hasNet) docomoDiscount += 1100;
-        if (hasCard) docomoDiscount += 187;
+        let docomoRecommend = '';
         let docomoCall = (callOption === '5min') ? 880 : (callOption === 'unlimited' ? 1980 : 0);
-        results.push({
-            name: 'ドコモ (eximo等)',
-            price: docomoBase - docomoDiscount + docomoCall,
-            class: 'docomo',
-            detail: `基本: ${docomoBase}円 / 割引: -${docomoDiscount}円 / 通話: +${docomoCall}円`
-        });
 
-        // 2. au (使い放題MAX or ミニミニ等を想定)
-        let auBase = (giga <= 4) ? 4928 : 7238;
-        let auDiscount = 0;
-        if (hasFamily) auDiscount += 1100;
-        if (hasNet) auDiscount += 1100;
-        if (hasCard) auDiscount += 110;
-        let auCall = (callOption === '5min') ? 880 : (callOption === 'unlimited' ? 1980 : 0);
-        results.push({
-            name: 'au (使い放題MAX等)',
-            price: auBase - auDiscount + auCall,
-            class: 'au',
-            detail: `基本: ${auBase}円 / 割引: -${auDiscount}円 / 通話: +${auCall}円`
-        });
+        if (cardType === 'd-gold') docomoDiscount += 550;
+        if (cardType === 'd-silver') docomoDiscount += 220;
+        if (hasNet) docomoDiscount += 1210;
+        if (hasDenki) docomoDiscount += 110;
 
-        // 3. ソフトバンク (ペイトク or ミニフィット等を想定)
-        let sbBase = (giga <= 2) ? 5445 : 7425;
-        let sbDiscount = 0;
-        if (hasFamily) sbDiscount += 1210;
-        if (hasNet) sbDiscount += 1100;
-        if (hasCard) sbDiscount += 110;
-        let sbCall = (callOption === '5min') ? 880 : (callOption === 'unlimited' ? 1980 : 0);
-        results.push({
-            name: 'ソフトバンク',
-            price: sbBase - sbDiscount + sbCall,
-            class: 'softbank',
-            detail: `基本: ${sbBase}円 / 割引: -${sbDiscount}円 / 通話: +${sbCall}円`
-        });
-
-        // 4. ahamo (基本20GB、大盛り100GB。家族割やネット割は対象外のフロー)
-        let ahamoBase = (giga <= 20) ? 2970 : 4950; 
-        // ahamoは最初から5分通話無料が含まれている前提のロジック例
-        let ahamoCall = (callOption === 'unlimited') ? 1100 : 0; 
-        results.push({
-            name: 'ahamo',
-            price: ahamoBase + ahamoCall,
-            class: 'ahamo',
-            detail: `基本(5分無料込): ${ahamoBase}円 / 24時間かけ放題化: +${ahamoCall}円 (※家族・ネット割対象外)`
-        });
-
-        // 5. UQモバイル (トクトクプラン・ミニミニプラン等を想定)
-        let uqBase = (giga <= 4) ? 2365 : 3465;
-        let uqDiscount = 0;
-        if (hasNet) uqDiscount += 1100; // 自宅セット割
-        if (hasCard) uqDiscount += 187;  // 家族割と重複しない等のルールは後日設定
-        let uqCall = (callOption === '5min') ? 880 : (callOption === 'unlimited' ? 1980 : 0);
-        results.push({
-            name: 'UQモバイル',
-            price: uqBase - uqDiscount + uqCall,
-            class: 'uq',
-            detail: `基本: ${uqBase}円 / 割引: -${uqDiscount}円 / 通話: +${uqCall}円`
-        });
-
-        // 6. Y!mobile (シンプル2 S/M/L等を想定)
-        let ymBase = (giga <= 4) ? 2365 : (giga <= 20 ? 4015 : 5115);
-        let ymDiscount = 0;
-        if (hasFamily) {
-            ymDiscount += 1100; // 家族割（2回線目以降を想定）
-        } else if (hasNet) {
-            ymDiscount += 1650; // おうち割光セット（家族割とは重複しない仕様が多いですが一旦独立計算）
+        if (giga <= 10) {
+            docomoPlanName = 'ドコモ (ドコモmini)';
+            docomoBase = (giga <= 4) ? 2750 : 3850;
+            docomoRecommend = '★ライトユーザー向けのコンパクトなプランです。';
+        } else {
+            docomoPlanName = 'ドコモ (ドコモMAX)';
+            docomoBase = 8448; 
+            if (familyLines === 2) docomoDiscount += 550;
+            if (familyLines >= 3) docomoDiscount += 1210;
+            docomoRecommend = '★DAZNが無料で付いてくるからスポーツ観戦が好きな人におすすめ！';
         }
-        if (hasCard) ymDiscount += 187;
+
+        let docomoFinalPrice = docomoBase - docomoDiscount + docomoCall;
+        if (docomoFinalPrice < 0) docomoFinalPrice = 0;
+        results.push({ name: docomoPlanName, price: docomoFinalPrice, class: 'docomo', detail: `定価: ${docomoBase}円 / 割引: -${docomoDiscount}円 / 通話: +${docomoCall}円`, recommend: docomoRecommend });
+
+
+        /* ====================================================
+           💡 2. ahamo
+           ==================================================== */
+        let ahamoBase = (giga <= 30) ? 2970 : 4950;
+        let ahamoCall = (callOption === 'unlimited') ? 1100 : 0;
+        results.push({ name: 'ahamo (アハモ)', price: ahamoBase + ahamoCall, class: 'ahamo', detail: `定価(5分無料込): ${ahamoBase}円 / かけ放題化: +${ahamoCall}円 (※割引対象外)`, recommend: '★オンライン限定プラン。標準で5分以内の国内通話が無料！' });
+
+
+        /* ====================================================
+           💡 3. au
+           ==================================================== */
+        let auBase = (giga <= 1) ? 6358 : 8008;
+        let auDiscount = 0;
+
+        // 【修正】au PAY カードで220円引き
+        if (cardType === 'au-pay') auDiscount += 220;
+        if (hasNet) auDiscount += 1210;
+        if (familyLines === 2) auDiscount += 660;
+        if (familyLines >= 3) auDiscount += 1210;
+
+        let auCall = (callOption === '5min') ? 880 : (callOption === 'unlimited' ? 1980 : 0);
+        let auFinalPrice = auBase - auDiscount + auCall;
+        if (auFinalPrice < 0) auFinalPrice = 0;
+        results.push({ name: 'au (バリューリンクプラン)', price: auFinalPrice, class: 'au', detail: `定価: ${auBase}円 / 割引: -${auDiscount}円 / 通話: +${auCall}円`, recommend: '★Pontaパスが無料でついてくる！よくローソンやクーポンを使う方におすすめ。' });
+
+
+        /* ====================================================
+           💡 4. UQモバイル
+           ==================================================== */
+        let uqTokutokuBase = (giga <= 5) ? 2948 : 4048;
+        let uqTokutokuDiscount = 0;
+        // 【修正】au PAY カードで220円引き
+        if (cardType === 'au-pay') uqTokutokuDiscount += 220;
+        if (hasNet) { uqTokutokuDiscount += 1100; } else if (familyLines >= 2) { uqTokutokuDiscount += 550; }
+        let uqTokutokuCall = (callOption === '5min') ? 880 : (callOption === 'unlimited' ? 1980 : 0);
+        let uqTokutokuPrice = uqTokutokuBase - uqTokutokuDiscount + uqTokutokuCall;
+
+        let uqComicomiBase = 3828;
+        let uqComicomiCall = (callOption === 'unlimited') ? 1100 : 0;
+        let uqComicomiPrice = uqComicomiBase + uqComicomiCall;
+
+        let uqFinalPrice = 0; let uqPlanName = ''; let uqDetail = ''; let uqRecommend = '';
+
+        if (giga <= 35 && (uqComicomiPrice < uqTokutokuPrice || giga > 30)) {
+            uqPlanName = 'UQモバイル (コミコミプランバリュー)'; uqFinalPrice = uqComicomiPrice;
+            uqDetail = `定価(10分無料込): ${uqComicomiBase}円 / かけ放題化: +${uqComicomiCall}円`;
+            uqRecommend = '★10分国内通話無料＆Pontaパス付き！35GB使えるシンプルでお得なプランです。';
+        } else {
+            uqPlanName = 'UQモバイル (トクトクプラン)'; uqFinalPrice = uqTokutokuPrice;
+            uqDetail = `定価: ${uqTokutokuBase}円 / 割引: -${uqTokutokuDiscount}円 / 通話: +${uqTokutokuCall}円`;
+            uqRecommend = '★中容量で高品質。ネット光回線セット割を組むと非常に安くなります！';
+        }
+        if (uqFinalPrice < 0) uqFinalPrice = 0;
+        results.push({ name: uqPlanName, price: uqFinalPrice, class: 'uq', detail: uqDetail, recommend: uqRecommend });
+
+
+        /* ====================================================
+           💡 5. ソフトバンク
+           ==================================================== */
+        let sbDiscount = 0;
+        if (cardType === 'paypay-gold') sbDiscount += 550;
+        if (cardType === 'paypay-normal') sbDiscount += 330;
+        if (hasNet) sbDiscount += 1100;
+        if (familyLines === 2) sbDiscount += 660;
+        if (familyLines >= 3) sbDiscount += 1210;
+
+        let sbCall = (callOption === '5min') ? 880 : (callOption === 'unlimited' ? 1980 : 0);
+        let sbUnlimitedPrice = 8008 - sbDiscount + sbCall;
+
+        let sbMinifitBase = (giga <= 2) ? 5258 : 6358;
+        let sbMinifitPrice = sbMinifitBase - sbDiscount + sbCall;
+
+        let sbFinalPrice = 0; let sbPlanName = ''; let sbDetail = ''; let sbRecommend = '';
+
+        if (giga <= 5 && sbMinifitPrice < sbUnlimitedPrice) {
+            sbPlanName = 'ソフトバンク (ミニフィット2)'; sbFinalPrice = sbMinifitPrice;
+            sbDetail = `定価: ${sbMinifitBase}円 / 割引: -${sbDiscount}円 / 通話: +${sbCall}円`;
+            sbRecommend = '★あまりギガを使わない月向けの小容量ステップ型プランです。';
+        } else {
+            sbPlanName = 'ソフトバンク (テイガク無制限)'; sbFinalPrice = sbUnlimitedPrice;
+            sbDetail = `定価: 8008円 / 割引: -${sbDiscount}円 / 通話: +${sbCall}円`;
+            sbRecommend = '★データ容量を気にせず使い放題！PayPayカードや光回線セットがお得。';
+        }
+        if (sbFinalPrice < 0) sbFinalPrice = 0;
+        results.push({ name: sbPlanName, price: sbFinalPrice, class: 'softbank', detail: sbDetail, recommend: sbRecommend });
+
+
+        /* ====================================================
+           💡 6. Y!mobile
+           ==================================================== */
+        let ymPlanName = ''; let ymBase = 0; let ymDiscount = 0; let ymRecommend = '';
+
+        if (cardType === 'paypay-gold') ymDiscount += 770;
+        if (cardType === 'paypay-normal') ymDiscount += 550;
+        if (hasNet) { ymDiscount += 1650; } else if (familyLines >= 2) { ymDiscount += 1100; }
+
+        if (giga <= 5) {
+            ymPlanName = 'Y!mobile (シンプルS)'; ymBase = 3278;
+            ymRecommend = '★ライトユーザー向け。PayPayカード割や光割で一気に安くなります！';
+        } else if (giga <= 30) {
+            ymPlanName = 'Y!mobile (シンプルM)'; ymBase = 4378;
+            ymRecommend = '★動画もSNSもたっぷり楽しめる、一番人気のミドル容量プランです。';
+        } else {
+            ymPlanName = 'Y!mobile (シンプルL)'; ymBase = 5478;
+            ymRecommend = '★大容量35GBプラン。速度制限を気にせずたっぷり使いたい方に。';
+        }
+
         let ymCall = (callOption === '5min') ? 880 : (callOption === 'unlimited' ? 1980 : 0);
-        results.push({
-            name: 'Y!mobile (ワイモバイル)',
-            price: ymBase - ymDiscount + ymCall,
-            class: 'ymobile',
-            detail: `基本: ${ymBase}円 / 割引: -${ymDiscount}円 / 通話: +${ymCall}円`
-        });
+        let ymFinalPrice = ymBase - ymDiscount + ymCall;
+        if (ymFinalPrice < 0) ymFinalPrice = 0;
+        results.push({ name: ymPlanName, price: ymFinalPrice, class: 'ymobile', detail: `定価: ${ymBase}円 / 割引: -${ymDiscount}円 / 通話: +${ymCall}円`, recommend: ymRecommend });
 
         // 料金の安い順に並び替え
         results.sort((a, b) => a.price - b.price);
 
-        // 結果画面の描画
+        // 結果描画
         const resultsList = document.getElementById('results-list');
         resultsList.innerHTML = '';
 
         results.forEach(item => {
             const card = document.createElement('div');
             card.className = `result-card ${item.class}`;
+            let recommendHtml = item.recommend ? `<div class="recommend-tag">${item.recommend}</div>` : '';
             card.innerHTML = `
                 <div>
                     <div class="brand-name">${item.name}</div>
                     <div class="details">${item.detail}</div>
+                    ${recommendHtml}
                 </div>
                 <div class="price">¥${item.price.toLocaleString()}</div>
             `;
             resultsList.appendChild(card);
         });
 
-        // 結果エリアを表示
         document.getElementById('results-area').style.display = 'block';
     }
 </script>
