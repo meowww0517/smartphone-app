@@ -164,6 +164,17 @@
     <div class="section">
         <label>適用可能な割引条件</label>
         
+        <div style="margin-bottom: 10px;">
+            <label style="font-weight: normal; font-size: 13px;">🎂 契約者の年齢</label>
+            <select id="age-limit">
+                <option value="none">一般（30歳〜59歳）</option>
+                <option value="u18">18歳以下</option>
+                <option value="u22">19歳〜22歳</option>
+                <option value="u29">23歳〜29歳</option>
+                <option value="o60">60歳以上</option>
+            </select>
+        </div>
+
         <div style="margin-top: 10px;">
             <label style="font-weight: normal; font-size: 13px;">👥 家族の回線数（対象プランに適用）</label>
             <select id="family-lines">
@@ -212,38 +223,51 @@
         const cardType = document.getElementById('card-type').value;
         const hasNet = document.getElementById('discount-net').checked;
         const hasDenki = document.getElementById('discount-denki').checked;
+        const ageLimit = document.getElementById('age-limit').value;
 
         let results = [];
 
         /* ====================================================
            💡 1. ドコモ
            ==================================================== */
-        let docomoPlanName = '';
-        let docomoBase = 0;
-        let docomoDiscount = 0;
-        let docomoRecommend = '';
+        let docomoPlanName = ''; let docomoBase = 0; let docomoDiscount = 0; let docomoRecommend = ''; let periodDiscountText = '';
         let docomoCall = (callOption === '5min') ? 880 : (callOption === 'unlimited' ? 1980 : 0);
 
-        if (cardType === 'd-gold') docomoDiscount += 550;
-        if (cardType === 'd-silver') docomoDiscount += 220;
-        if (hasNet) docomoDiscount += 1210;
-        if (hasDenki) docomoDiscount += 110;
-
         if (giga <= 10) {
-            docomoPlanName = 'ドコモ (ドコモmini)';
-            docomoBase = (giga <= 4) ? 2750 : 3850;
+            docomoPlanName = 'ドコモ (ドコモmini)'; docomoBase = (giga <= 4) ? 2750 : 3850;
+            if (cardType === 'd-gold') docomoDiscount += 550;
+            if (cardType === 'd-silver') docomoDiscount += 220;
+            if (hasNet) docomoDiscount += 1210;
+            if (hasDenki) docomoDiscount += 110;
             docomoRecommend = '★ライトユーザー向けのコンパクトなプランです。';
         } else {
-            docomoPlanName = 'ドコモ (ドコモMAX)';
-            docomoBase = 8448; 
-            if (familyLines === 2) docomoDiscount += 550;
-            if (familyLines >= 3) docomoDiscount += 1210;
-            docomoRecommend = '★DAZNが無料で付いてくるからスポーツ観戦が好きな人におすすめ！';
+            // 18歳以下、19〜22歳はドコモのU22特別プラン判定に含む
+            if ((ageLimit === 'u18' || ageLimit === 'u22') && giga <= 30) {
+                docomoPlanName = 'ドコモ (ドコモMAX U22特別)'; docomoBase = 6798;
+                if (cardType === 'd-gold') docomoDiscount += 550; if (cardType === 'd-silver') docomoDiscount += 220;
+                if (hasNet) docomoDiscount += 1210; if (familyLines >= 3) docomoDiscount += 1210;
+                docomoDiscount += 3838; periodDiscountText = '（※最初の7ヶ月間。8ヶ月目以降+3,838円）';
+                docomoRecommend = '★若者限定！30GBまで破格の安さで使える特別プランです。';
+            } else {
+                docomoPlanName = 'ドコモ (ドコモMAX)'; docomoBase = 8448;
+                if (cardType === 'd-gold') docomoDiscount += 550; if (cardType === 'd-silver') docomoDiscount += 220;
+                if (hasNet) docomoDiscount += 1210;
+                if (familyLines === 2) docomoDiscount += 550; if (familyLines >= 3) docomoDiscount += 1210;
+                if (ageLimit === 'u29') {
+                    docomoDiscount += 3838; periodDiscountText = '（※最初の3ヶ月間。4ヶ月目以降+3,838円）';
+                    docomoRecommend = '★29歳以下特典適用中！最初の3ヶ月間が超お得になります。';
+                } else if (ageLimit === 'u18' || ageLimit === 'u22') {
+                    docomoDiscount += 3838; periodDiscountText = '（※最初の3ヶ月間。4ヶ月目以降+3,838円）';
+                    docomoRecommend = '★30GB超過のため無制限モード。U22特典で3ヶ月間大幅割引！';
+                } else {
+                    docomoRecommend = '★DAZNが無料で付いてくるからスポーツ観戦が好きな人におすすめ！';
+                }
+            }
+            if (hasDenki) docomoDiscount += 110;
         }
-
         let docomoFinalPrice = docomoBase - docomoDiscount + docomoCall;
         if (docomoFinalPrice < 0) docomoFinalPrice = 0;
-        results.push({ name: docomoPlanName, price: docomoFinalPrice, class: 'docomo', detail: `定価: ${docomoBase}円 / 割引: -${docomoDiscount}円 / 通話: +${docomoCall}円`, recommend: docomoRecommend });
+        results.push({ name: docomoPlanName, price: docomoFinalPrice, class: 'docomo', detail: `定価: ${docomoBase}円 / 割引: -${docomoDiscount}円 / 通話: +${docomoCall}円 ${periodDiscountText}`, recommend: docomoRecommend });
 
 
         /* ====================================================
@@ -251,28 +275,50 @@
            ==================================================== */
         let ahamoBase = (giga <= 30) ? 2970 : 4950;
         let ahamoCall = (callOption === 'unlimited') ? 1100 : 0;
-        results.push({ name: 'ahamo (アハモ)', price: ahamoBase + ahamoCall, class: 'ahamo', detail: `定価(5分無料込): ${ahamoBase}円 / かけ放題化: +${ahamoCall}円 (※割引対象外)`, recommend: '★オンライン限定プラン。標準で5分以内の国内通話が無料！' });
+        results.push({ name: 'ahamo (アハモ)', price: ahamoBase + ahamoCall, class: 'ahamo', detail: `定価(5分無料込): ${ahamoBase}円 / かけ放題化: +${ahamoCall}円`, recommend: '★オンライン限定プラン。標準で5分以内の国内通話が無料！' });
 
 
         /* ====================================================
-           💡 3. au
+           💡 3. au（【修正】U18限定プラン対応）
            ==================================================== */
-        let auBase = (giga <= 1) ? 6358 : 8008;
-        let auDiscount = 0;
+        let auPlanName = ''; let auBase = 0; let auDiscount = 0; let auCall = 0; let auRecommend = '';
 
-        if (cardType === 'au-pay') auDiscount += 220;
-        if (hasNet) auDiscount += 1210;
-        if (familyLines === 2) auDiscount += 660;
-        if (familyLines >= 3) auDiscount += 1210;
+        // ① 18歳以下かつ20GB以下の場合（U18プラン）
+        if (ageLimit === 'u18' && giga <= 20) {
+            auPlanName = 'au (U18プラン)';
+            auBase = (giga <= 3) ? 1078 : 2728;
+            
+            if (cardType === 'au-pay') auDiscount += 220;
+            if (hasNet) auDiscount += 550; // U18の光割-550円
+            if (familyLines === 2) auDiscount += 220; // 2回線-220円
+            if (familyLines >= 3) auDiscount += 550;  // 3回線以上-550円
+            
+            auCall = (callOption === '5min') ? 880 : (callOption === 'unlimited' ? 1980 : 0);
+            auRecommend = '★18歳以下限定プラン！少容量から中容量まで非常にお得に維持できます。';
+        }
+        // ② 60歳以上かつ5GB以下の場合（60歳以上限定プラン）
+        else if (ageLimit === 'o60' && giga <= 5) {
+            auPlanName = 'au (60歳以上限定プラン)'; auBase = 4048;
+            if (cardType === 'au-pay') auDiscount += 220; if (hasNet) auDiscount += 1100;
+            if (callOption === 'none' || callOption === '5min') { auCall = 0; } else if (callOption === 'unlimited') { auCall = 1100; }
+            auRecommend = '★60歳以上限定！5分以内の国内通話が何度でも無料で、シニアに最適なプランです。';
+        } 
+        // ③ 通常プラン（バリューリンクプラン）
+        else {
+            auPlanName = 'au (バリューリンクプラン)'; auBase = (giga <= 1) ? 6358 : 8008;
+            if (cardType === 'au-pay') auDiscount += 220; if (hasNet) auDiscount += 1210;
+            if (familyLines === 2) auDiscount += 660; if (familyLines >= 3) auDiscount += 1210;
+            auCall = (callOption === '5min') ? 880 : (callOption === 'unlimited' ? 1980 : 0);
+            auRecommend = '★Pontaパスが無料でついてくる！よくローソンやクーポンを使う方におすすめ。';
+        }
 
-        let auCall = (callOption === '5min') ? 880 : (callOption === 'unlimited' ? 1980 : 0);
         let auFinalPrice = auBase - auDiscount + auCall;
         if (auFinalPrice < 0) auFinalPrice = 0;
-        results.push({ name: 'au (バリューリンクプラン)', price: auFinalPrice, class: 'au', detail: `定価: ${auBase}円 / 割引: -${auDiscount}円 / 通話: +${auCall}円`, recommend: '★Pontaパスが無料でついてくる！よくローソンやクーポンを使う方におすすめ。' });
+        results.push({ name: auPlanName, price: auFinalPrice, class: 'au', detail: `定価: ${auBase}円 / 割引: -${auDiscount}円 / 通話: +${auCall}円`, recommend: auRecommend });
 
 
         /* ====================================================
-           💡 4. UQモバイル（【修正】35GB超過時は提案しない）
+           💡 4. UQモバイル
            ==================================================== */
         if (giga <= 35) {
             let uqTokutokuBase = (giga <= 5) ? 2948 : 4048;
@@ -334,7 +380,7 @@
 
 
         /* ====================================================
-           💡 6. Y!mobile（【修正】35GB超過時は提案しない）
+           💡 6. Y!mobile
            ==================================================== */
         if (giga <= 35) {
             let ymPlanName = ''; let ymBase = 0; let ymDiscount = 0; let ymRecommend = '';
