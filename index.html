@@ -260,7 +260,6 @@
         let auBase = (giga <= 1) ? 6358 : 8008;
         let auDiscount = 0;
 
-        // 【修正】au PAY カードで220円引き
         if (cardType === 'au-pay') auDiscount += 220;
         if (hasNet) auDiscount += 1210;
         if (familyLines === 2) auDiscount += 660;
@@ -273,33 +272,34 @@
 
 
         /* ====================================================
-           💡 4. UQモバイル
+           💡 4. UQモバイル（【修正】35GB超過時は提案しない）
            ==================================================== */
-        let uqTokutokuBase = (giga <= 5) ? 2948 : 4048;
-        let uqTokutokuDiscount = 0;
-        // 【修正】au PAY カードで220円引き
-        if (cardType === 'au-pay') uqTokutokuDiscount += 220;
-        if (hasNet) { uqTokutokuDiscount += 1100; } else if (familyLines >= 2) { uqTokutokuDiscount += 550; }
-        let uqTokutokuCall = (callOption === '5min') ? 880 : (callOption === 'unlimited' ? 1980 : 0);
-        let uqTokutokuPrice = uqTokutokuBase - uqTokutokuDiscount + uqTokutokuCall;
+        if (giga <= 35) {
+            let uqTokutokuBase = (giga <= 5) ? 2948 : 4048;
+            let uqTokutokuDiscount = 0;
+            if (cardType === 'au-pay') uqTokutokuDiscount += 220;
+            if (hasNet) { uqTokutokuDiscount += 1100; } else if (familyLines >= 2) { uqTokutokuDiscount += 550; }
+            let uqTokutokuCall = (callOption === '5min') ? 880 : (callOption === 'unlimited' ? 1980 : 0);
+            let uqTokutokuPrice = uqTokutokuBase - uqTokutokuDiscount + uqTokutokuCall;
 
-        let uqComicomiBase = 3828;
-        let uqComicomiCall = (callOption === 'unlimited') ? 1100 : 0;
-        let uqComicomiPrice = uqComicomiBase + uqComicomiCall;
+            let uqComicomiBase = 3828;
+            let uqComicomiCall = (callOption === 'unlimited') ? 1100 : 0;
+            let uqComicomiPrice = uqComicomiBase + uqComicomiCall;
 
-        let uqFinalPrice = 0; let uqPlanName = ''; let uqDetail = ''; let uqRecommend = '';
+            let uqFinalPrice = 0; let uqPlanName = ''; let uqDetail = ''; let uqRecommend = '';
 
-        if (giga <= 35 && (uqComicomiPrice < uqTokutokuPrice || giga > 30)) {
-            uqPlanName = 'UQモバイル (コミコミプランバリュー)'; uqFinalPrice = uqComicomiPrice;
-            uqDetail = `定価(10分無料込): ${uqComicomiBase}円 / かけ放題化: +${uqComicomiCall}円`;
-            uqRecommend = '★10分国内通話無料＆Pontaパス付き！35GB使えるシンプルでお得なプランです。';
-        } else {
-            uqPlanName = 'UQモバイル (トクトクプラン)'; uqFinalPrice = uqTokutokuPrice;
-            uqDetail = `定価: ${uqTokutokuBase}円 / 割引: -${uqTokutokuDiscount}円 / 通話: +${uqTokutokuCall}円`;
-            uqRecommend = '★中容量で高品質。ネット光回線セット割を組むと非常に安くなります！';
+            if (uqComicomiPrice < uqTokutokuPrice || giga > 30) {
+                uqPlanName = 'UQモバイル (コミコミプランバリュー)'; uqFinalPrice = uqComicomiPrice;
+                uqDetail = `定価(10分無料込): ${uqComicomiBase}円 / かけ放題化: +${uqComicomiCall}円`;
+                uqRecommend = '★10分国内通話無料＆Pontaパス付き！35GB使えるシンプルでお得なプランです。';
+            } else {
+                uqPlanName = 'UQモバイル (トクトクプラン)'; uqFinalPrice = uqTokutokuPrice;
+                uqDetail = `定価: ${uqTokutokuBase}円 / 割引: -${uqTokutokuDiscount}円 / 通話: +${uqTokutokuCall}円`;
+                uqRecommend = '★中容量で高品質。ネット光回線セット割を組むと非常に安くなります！';
+            }
+            if (uqFinalPrice < 0) uqFinalPrice = 0;
+            results.push({ name: uqPlanName, price: uqFinalPrice, class: 'uq', detail: uqDetail, recommend: uqRecommend });
         }
-        if (uqFinalPrice < 0) uqFinalPrice = 0;
-        results.push({ name: uqPlanName, price: uqFinalPrice, class: 'uq', detail: uqDetail, recommend: uqRecommend });
 
 
         /* ====================================================
@@ -334,29 +334,31 @@
 
 
         /* ====================================================
-           💡 6. Y!mobile
+           💡 6. Y!mobile（【修正】35GB超過時は提案しない）
            ==================================================== */
-        let ymPlanName = ''; let ymBase = 0; let ymDiscount = 0; let ymRecommend = '';
+        if (giga <= 35) {
+            let ymPlanName = ''; let ymBase = 0; let ymDiscount = 0; let ymRecommend = '';
 
-        if (cardType === 'paypay-gold') ymDiscount += 770;
-        if (cardType === 'paypay-normal') ymDiscount += 550;
-        if (hasNet) { ymDiscount += 1650; } else if (familyLines >= 2) { ymDiscount += 1100; }
+            if (cardType === 'paypay-gold') ymDiscount += 770;
+            if (cardType === 'paypay-normal') ymDiscount += 550;
+            if (hasNet) { ymDiscount += 1650; } else if (familyLines >= 2) { ymDiscount += 1100; }
 
-        if (giga <= 5) {
-            ymPlanName = 'Y!mobile (シンプルS)'; ymBase = 3278;
-            ymRecommend = '★ライトユーザー向け。PayPayカード割や光割で一気に安くなります！';
-        } else if (giga <= 30) {
-            ymPlanName = 'Y!mobile (シンプルM)'; ymBase = 4378;
-            ymRecommend = '★動画もSNSもたっぷり楽しめる、一番人気のミドル容量プランです。';
-        } else {
-            ymPlanName = 'Y!mobile (シンプルL)'; ymBase = 5478;
-            ymRecommend = '★大容量35GBプラン。速度制限を気にせずたっぷり使いたい方に。';
+            if (giga <= 5) {
+                ymPlanName = 'Y!mobile (シンプルS)'; ymBase = 3278;
+                ymRecommend = '★ライトユーザー向け。PayPayカード割や光割で一気に安くなります！';
+            } else if (giga <= 30) {
+                ymPlanName = 'Y!mobile (シンプルM)'; ymBase = 4378;
+                ymRecommend = '★動画もSNSもたっぷり楽しめる、一番人気のミドル容量プランです。';
+            } else {
+                ymPlanName = 'Y!mobile (シンプルL)'; ymBase = 5478;
+                ymRecommend = '★大容量35GBプラン。速度制限を気にせずたっぷり使いたい方に。';
+            }
+
+            let ymCall = (callOption === '5min') ? 880 : (callOption === 'unlimited' ? 1980 : 0);
+            let ymFinalPrice = ymBase - ymDiscount + ymCall;
+            if (ymFinalPrice < 0) ymFinalPrice = 0;
+            results.push({ name: ymPlanName, price: ymFinalPrice, class: 'ymobile', detail: `定価: ${ymBase}円 / 割引: -${ymDiscount}円 / 通話: +${ymCall}円`, recommend: ymRecommend });
         }
-
-        let ymCall = (callOption === '5min') ? 880 : (callOption === 'unlimited' ? 1980 : 0);
-        let ymFinalPrice = ymBase - ymDiscount + ymCall;
-        if (ymFinalPrice < 0) ymFinalPrice = 0;
-        results.push({ name: ymPlanName, price: ymFinalPrice, class: 'ymobile', detail: `定価: ${ymBase}円 / 割引: -${ymDiscount}円 / 通話: +${ymCall}円`, recommend: ymRecommend });
 
         // 料金の安い順に並び替え
         results.sort((a, b) => a.price - b.price);
