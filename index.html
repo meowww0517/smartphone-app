@@ -5,252 +5,333 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>プリンセス スマホ料金シミュレーター</title>
     <style>
+        /* --- 全体の世界観（背景とベース） --- */
         body {
-            font-family: 'Hiragino Kaku Gothic ProN', 'ヒラギノ角ゴ ProN W3', Meiryo, sans-serif;
-            background-color: #fff0f5; /* ラベンダーピンクの背景 */
-            background-image: 
-                radial-gradient(#ffffff 20%, transparent 20%),
-                radial-gradient(#ffffff 20%, transparent 20%);
-            background-size: 40px 40px;
-            background-position: 0 0, 20px 20px; /* 大人可愛いドット柄 */
+            font-family: 'Georgia', 'Hiragino Mincho ProN', 'serif';
+            background: radial-gradient(circle, #fff0f3 0%, #ffe3e8 100%);
             margin: 0;
-            padding: 20px;
-            color: #5c4048; /* 優しいダークブラウン */
+            padding: 30px 10px;
+            color: #5c4349;
+            display: flex;
+            justify-content: center;
         }
-        .container {
-            max-width: 650px;
-            margin: 20px auto;
-            background: linear-gradient(135deg, #ffffff 0%, #fff5f7 100%);
-            padding: 30px;
-            border-radius: 24px;
+
+        /* --- 魔法のジュエリーボックス --- */
+        .jewelry-box {
+            max-width: 900px;
+            width: 100%;
+            background: linear-gradient(135deg, #fff5f7 0%, #fce4ec 100%);
+            border-radius: 30px;
+            border: 8px solid #ffffff;
             box-shadow: 
-                0 10px 30px rgba(255, 182, 193, 0.4),
-                inset 0 0 0 4px #ffffff,
-                inset 0 0 15px rgba(212, 175, 55, 0.1);
-            border: 2px solid #ffccd5;
+                0 20px 50px rgba(230, 150, 170, 0.5),
+                0 0 0 4px #e5b0bc,
+                inset 0 0 30px rgba(255, 255, 255, 0.8);
+            padding: 35px;
+            box-sizing: border-box;
             position: relative;
         }
-        /* ティアラをイメージした装飾 */
-        h1 {
+
+        /* ボックス上部のティアラ冠 */
+        .tiara-header {
             text-align: center;
-            font-size: 24px;
-            color: #d46a84;
-            margin-bottom: 30px;
-            font-weight: bold;
-            text-shadow: 1px 1px 2px #ffffff, 0 0 8px rgba(255, 255, 255, 0.8);
+            background: linear-gradient(to bottom, #ffffff, #fff0f2);
+            border: 3px solid #f3cbd3;
+            border-radius: 50px;
+            padding: 10px 30px;
+            display: inline-block;
+            margin: 0 auto 35px auto;
+            left: 50%;
+            transform: translateX(-50%);
             position: relative;
+            box-shadow: 0 4px 15px rgba(229, 176, 188, 0.3);
         }
-        h1::before {
-            content: "👑";
+        .tiara-header h1 {
+            margin: 0;
+            font-size: 22px;
+            color: #b8526c;
+            letter-spacing: 2px;
+            text-shadow: 1px 1px 0px #ffffff;
+        }
+        .tiara-header::before {
+            content: "✨ 👑 ✨";
             display: block;
-            font-size: 28px;
-            margin-bottom: 5px;
-            text-align: center;
+            font-size: 18px;
+            margin-bottom: 2px;
         }
-        .section {
-            margin-bottom: 25px;
-            padding: 20px;
-            background: #ffffff;
-            border-radius: 16px;
-            border: 1px solid #ffe3e8;
-            box-shadow: 0 4px 10px rgba(255, 192, 203, 0.15);
+
+        /* --- キルティング風の上段トレイ --- */
+        .input-tray {
+            background: linear-gradient(135deg, #ffebee 0%, #fce4ec 100%);
+            border-radius: 20px;
+            border: 2px dashed #f5bccc;
+            padding: 25px;
+            box-shadow: inset 0 4px 12px rgba(218, 142, 162, 0.2);
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
         }
+        @media (max-width: 700px) {
+            .input-tray { grid-template-columns: 1fr; }
+        }
+
+        .tray-item {
+            background: rgba(255, 255, 255, 0.7);
+            border-radius: 15px;
+            padding: 15px 20px;
+            border: 1px solid #ffffff;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.02);
+        }
+        .tray-item.full-width {
+            grid-column: 1 / -1;
+        }
+
         label {
             display: block;
             font-weight: bold;
-            margin-bottom: 10px;
-            font-size: 14px;
-            color: #b3566d;
+            font-size: 13px;
+            color: #a8435d;
+            margin-bottom: 8px;
         }
+
+        /* --- セレクトボックスとパールの真珠装飾 --- */
         select {
             width: 100%;
-            padding: 12px;
-            border: 2px solid #ffd0da;
-            border-radius: 12px;
-            font-size: 15px;
-            box-sizing: border-box;
-            background-color: #fff9fa;
-            color: #5c4048;
+            padding: 10px 15px;
+            border: 2px solid #fbc4d2;
+            border-radius: 30px;
+            background: #ffffff;
+            color: #5c4349;
+            font-size: 14px;
             outline: none;
-            transition: border-color 0.2s;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.03);
+            cursor: pointer;
         }
-        select:focus {
-            border-color: #ff9ebb;
+
+        /* --- ハート＆パール付カスタムスライダー --- */
+        .giga-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 15px;
         }
-        /* スライダー（ギガ選択）のプリンセス化 */
         input[type="range"] {
             -webkit-appearance: none;
-            width: 100%;
-            height: 8px;
-            background: #ffe3e8;
-            border-radius: 4px;
-            outline: none;
+            flex-grow: 1;
+            height: 12px;
+            background: linear-gradient(to right, #fbc4d2, #ffffff);
+            border-radius: 10px;
+            border: 1px solid #e0a3b2;
         }
         input[type="range"]::-webkit-slider-thumb {
             -webkit-appearance: none;
-            width: 22px;
-            height: 22px;
-            border-radius: 50%;
-            background: radial-gradient(circle, #ffffff 0%, #ff9ebb 70%, #d46a84 100%);
+            width: 26px;
+            height: 26px;
+            background: radial-gradient(circle, #ffffff 0%, #ff8da1 60%, #d84b6b 100%);
             border: 2px solid #ffffff;
-            box-shadow: 0 2px 6px rgba(212, 106, 132, 0.4);
+            border-radius: 50%;
+            box-shadow: 0 3px 8px rgba(216, 75, 107, 0.4);
             cursor: pointer;
         }
-        .giga-value {
-            font-size: 22px;
-            color: #e65c7b;
-            font-weight: bold;
-            text-align: center;
-            margin-top: 10px;
-            text-shadow: 1px 1px 0px #ffffff;
-        }
-        .checkbox-group {
+        .heart-giga-badge {
+            background: radial-gradient(circle, #ffffff 20%, #ffb1c1 100%);
+            border: 2px solid #ffffff;
+            min-width: 65px;
+            height: 65px;
+            border-radius: 50%;
             display: flex;
             flex-direction: column;
-            gap: 12px;
-            margin-top: 10px;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 4px 10px rgba(224, 115, 137, 0.3);
+        }
+        .heart-giga-badge .num {
+            font-size: 20px;
+            font-weight: bold;
+            color: #c93b5a;
+            line-height: 1;
+        }
+        .heart-giga-badge .unit {
+            font-size: 10px;
+            color: #8c5864;
+        }
+
+        /* --- チェックボックスのドレスアップ --- */
+        .checkbox-list {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
         }
         .checkbox-label {
             display: flex;
             align-items: center;
-            font-weight: normal;
+            gap: 8px;
+            font-size: 13px;
             cursor: pointer;
-            font-size: 14px;
         }
         .checkbox-label input {
-            margin-right: 12px;
             width: 18px;
             height: 18px;
-            accent-color: #ff69b4; /* ピンクのチェックボックス */
+            accent-color: #e25273;
         }
-        /* 魔法をかけるようなシミュレートボタン */
-        button {
-            width: 100%;
-            padding: 16px;
-            background: linear-gradient(to right, #ff9ebb 0%, #ff69b4 50%, #ff9ebb 100%);
+
+        /* --- 魔法をかけるシミュレートボタン --- */
+        .magic-button-wrapper {
+            text-align: center;
+            margin: 25px 0 35px 0;
+        }
+        button.magic-btn {
+            background: linear-gradient(to right, #ffaec0 0%, #f47c96 50%, #ffaec0 100%);
             background-size: 200% auto;
-            color: white;
-            border: none;
-            border-radius: 14px;
+            border: 3px solid #ffffff;
+            padding: 15px 60px;
             font-size: 18px;
             font-weight: bold;
+            color: #ffffff;
+            border-radius: 50px;
             cursor: pointer;
-            box-shadow: 0 6px 20px rgba(255, 105, 180, 0.4), inset 0 2px 4px rgba(255,255,255,0.4);
-            text-shadow: 1px 1px 3px rgba(0,0,0,0.15);
-            transition: 0.3s;
+            box-shadow: 0 8px 25px rgba(244, 124, 150, 0.5), inset 0 2px 4px rgba(255,255,255,0.4);
+            text-shadow: 1px 1px 2px rgba(150, 40, 60, 0.3);
+            transition: 0.4s;
         }
-        button:hover {
+        button.magic-btn:hover {
             background-position: right center;
-            box-shadow: 0 8px 24px rgba(255, 105, 180, 0.5);
-            transform: translateY(-1px);
+            transform: scale(1.03);
+            box-shadow: 0 10px 30px rgba(244, 124, 150, 0.6);
         }
-        .results {
-            margin-top: 30px;
+
+        /* --- 下段：ペンダントボトルが並ぶショーケース --- */
+        .showcase {
             display: none;
+            background: linear-gradient(to bottom, #fff5f6, #fae1e5);
+            border-radius: 24px;
+            padding: 25px 15px;
+            border-top: 5px solid #e0b0ba;
+            box-shadow: inset 0 10px 20px rgba(0,0,0,0.05);
         }
-        .results h2 {
-            font-size: 18px;
-            color: #b3566d;
-            margin-bottom: 15px;
+        .showcase h2 {
+            font-size: 15px;
             text-align: center;
+            color: #8c5260;
+            margin-top: 0;
+            margin-bottom: 25px;
+            letter-spacing: 1px;
         }
-        /* 宝石リボン風の結果カード */
-        .result-card {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 18px 20px;
-            margin-bottom: 14px;
-            border-radius: 16px;
+
+        /* 香水瓶・ペンダント風カードのグリッド */
+        .bottle-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            gap: 15px;
+        }
+
+        /* ボトルデザインベース */
+        .pendant-bottle {
             background: #ffffff;
-            border: 2px solid #ffe3e8;
-            box-shadow: 0 4px 15px rgba(255, 192, 203, 0.1);
+            border: 2px solid #fcd2dc;
+            border-radius: 18px 18px 25px 25px; /* ボトル型 */
+            padding: 40px 10px 15px 10px; /* 上部にリボンスペース */
             position: relative;
-            overflow: hidden;
+            text-align: center;
+            box-shadow: 0 8px 20px rgba(235, 175, 188, 0.3);
+            transition: transform 0.3s;
         }
-        /* 各キャリアの左側に輝く宝石風の縦ライン */
-        .result-card::before {
+        .pendant-bottle:hover {
+            transform: translateY(-5px);
+        }
+
+        /* ボトル上部の一体型リボン飾り */
+        .pendant-bottle::after {
+            content: "🎀";
+            position: absolute;
+            top: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 28px;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+        }
+
+        /* 各キャリアのテーマに合わせたボトルカラーキャップの偽装線 */
+        .pendant-bottle::before {
             content: "";
             position: absolute;
-            left: 0;
-            top: 0;
-            bottom: 0;
-            width: 8px;
+            top: 15px;
+            left: 15%;
+            width: 70%;
+            height: 4px;
+            border-radius: 2px;
         }
-        .docomo::before { background: linear-gradient(#cc0033, #ff4d79); }
-        .au::before { background: linear-gradient(#ff6600, #ff9933); }
-        .softbank::before { background: linear-gradient(#999999, #cccccc); }
-        .ahamo::before { background: linear-gradient(#000000, #555555); }
-        .uq::before { background: linear-gradient(#ff0066, #ff66cc); }
-        .ymobile::before { background: linear-gradient(#ff0033, #ff6666); }
+        .docomo::before { background: #cc0033; }
+        .au::before { background: #ff6600; }
+        .softbank::before { background: #999999; }
+        .ahamo::before { background: #000000; }
+        .uq::before { background: #ff0066; }
+        .ymobile::before { background: #ff0033; }
 
-        .brand-name {
+        .bottle-brand {
+            font-size: 13px;
             font-weight: bold;
-            font-size: 16px;
-            color: #4a3238;
+            color: #444;
+            margin-bottom: 8px;
+            height: 36px;
             display: flex;
             align-items: center;
-            gap: 5px;
+            justify-content: center;
         }
-        .brand-name::before {
-            content: "✨";
-            font-size: 12px;
-        }
-        .recommend-tag {
-            display: inline-block;
-            background-color: #fff0f2;
-            color: #d46a84;
-            font-size: 11px;
-            padding: 4px 8px;
-            border-radius: 8px;
-            margin-top: 6px;
+        .bottle-price {
+            font-size: 20px;
             font-weight: bold;
-            border: 1px solid #ffe3e8;
+            color: #d14161;
+            margin-bottom: 5px;
         }
-        .price {
-            font-size: 22px;
-            font-weight: bold;
-            color: #e65c7b;
-            text-shadow: 1px 1px 0 #ffffff;
-        }
-        .price::after {
-            content: " (税込)";
+        .bottle-price span {
             font-size: 11px;
             font-weight: normal;
-            color: #8c7076;
+            color: #7c5c64;
         }
-        .details {
-            font-size: 11px;
-            color: #8c7076;
-            margin-top: 4px;
+        .bottle-detail {
+            font-size: 10px;
+            color: #8c7379;
+            line-height: 1.3;
+            background: #fff5f6;
+            padding: 6px 4px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            min-height: 40px;
+        }
+        .bottle-tag {
+            font-size: 9px;
+            font-weight: bold;
+            color: #ffffff;
+            background: linear-gradient(to right, #ff94b0, #f26687);
+            padding: 3px 6px;
+            border-radius: 20px;
+            display: inline-block;
         }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h1>プリンセス スマホ料金シミュレーター</h1>
-    
-    <div class="section">
-        <label for="giga">💖 1ヶ月に必要なデータ通信量 (ギガ数)</label>
-        <input type="range" id="giga" min="1" max="120" value="20" oninput="updateGigaText(this.value)">
-        <div class="giga-value"><span id="giga-val">20</span> GB</div>
+<div class="jewelry-box">
+    <div class="tiara-header">
+        <h1>プリンセス スマホ料金シミュレーター</h1>
     </div>
     
-    <div class="section">
-        <label for="call">📞 通話オプション（かけ放題）</label>
-        <select id="call">
-            <option value="none">なし（従量制: 22円/30秒）</option>
-            <option value="5min">5分かけ放題（定額）</option>
-            <option value="unlimited">24時間いつでもかけ放題</option>
-        </select>
-    </div>
-    
-    <div class="section">
-        <label>💎 適用可能な割引条件</label>
+    <div class="input-tray">
         
-        <div style="margin-bottom: 12px;">
-            <label style="font-weight: normal; font-size: 13px;">🎂 契約者の年齢</label>
+        <div class="tray-item full-width">
+            <label>💖 1ヶ月に必要なデータ通信量</label>
+            <div class="giga-wrapper">
+                <input type="range" id="giga" min="1" max="120" value="20" oninput="updateGigaText(this.value)">
+                <div class="heart-giga-badge">
+                    <span class="num" id="giga-val">20</span>
+                    <span class="unit">GB</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="tray-item">
+            <label>🎂 契約者の年齢</label>
             <select id="age-limit">
                 <option value="none">一般（30歳〜59歳）</option>
                 <option value="u18">18歳以下</option>
@@ -259,40 +340,53 @@
                 <option value="o60">60歳以上</option>
             </select>
         </div>
+        
+        <div class="tray-item">
+            <label>📞 通話オプション（かけ放題）</label>
+            <select id="call">
+                <option value="none">なし（30秒/22円）</option>
+                <option value="5min">5分かけ放題</option>
+                <option value="unlimited">24時間かけ放題</option>
+            </select>
+        </div>
 
-        <div style="margin-top: 12px;">
-            <label style="font-weight: normal; font-size: 13px;">👥 家族の回線数（対象プランに適用）</label>
+        <div class="tray-item">
+            <label>👥 家族の回線数</label>
             <select id="family-lines">
-                <option value="1">1回線（単身・家族割なし）</option>
+                <option value="1">1回線（家族割なし）</option>
                 <option value="2">2回線</option>
                 <option value="3">3回線以上</option>
             </select>
         </div>
 
-        <div style="margin-top: 12px;">
-            <label style="font-weight: normal; font-size: 13px;">💳 クレジットカード決済</label>
+        <div class="tray-item">
+            <label>💳 クレジットカード決済</label>
             <select id="card-type">
-                <option value="none">なし（その他の決済）</option>
+                <option value="none">なし</option>
                 <option value="d-gold">dカード GOLD</option>
                 <option value="d-silver">dカード SILVER</option>
                 <option value="au-pay">au PAY カード</option>
                 <option value="paypay-gold">PayPayカード GOLD</option>
                 <option value="paypay-normal">PayPayカード（一般）</option>
-                <option value="other-brand">他社の指定カード</option>
             </select>
         </div>
 
-        <div class="checkbox-group" style="margin-top: 15px;">
-            <label class="checkbox-label"><input type="checkbox" id="discount-net"> 🏠 自宅のネット回線セット割（各社の光割など）</label>
-            <label class="checkbox-label"><input type="checkbox" id="discount-denki"> ⚡ でんき割</label>
+        <div class="tray-item full-width">
+            <label>💎 適用可能なセット割引</label>
+            <div class="checkbox-list">
+                <label class="checkbox-label"><input type="checkbox" id="discount-net"> 🏠 自宅のネット回線セット割</label>
+                <label class="checkbox-label"><input type="checkbox" id="discount-denki"> ⚡ でんき割</label>
+            </div>
         </div>
     </div>
     
-    <button onclick="calculateRates()">料金をシミュレーションする ✨</button>
+    <div class="magic-button-wrapper">
+        <button class="magic-btn" onclick="calculateRates()">料金を調べる ✨</button>
+    </div>
     
-    <div class="results" id="results-area">
-        <h2>📊 各社のおすすめプラン料金（月額）</h2>
-        <div id="results-list"></div>
+    <div class="showcase" id="results-area">
+        <h2>📊 ジュエリーボトル・プランコレクション（月額/税込）</h2>
+        <div class="bottle-grid" id="results-list"></div>
     </div>
 </div>
 
@@ -315,53 +409,46 @@
         /* ====================================================
            💡 1. ドコモ
            ==================================================== */
-        let docomoPlanName = ''; let docomoBase = 0; let docomoDiscount = 0; let docomoRecommend = ''; let periodDiscountText = '';
+        let docomoPlanName = ''; let docomoBase = 0; let docomoDiscount = 0; let docomoRecommend = '';
         let docomoCall = (callOption === '5min') ? 880 : (callOption === 'unlimited' ? 1980 : 0);
 
         if (giga <= 10) {
-            docomoPlanName = 'ドコモ (ドコモmini)'; docomoBase = (giga <= 4) ? 2750 : 3850;
+            docomoPlanName = 'ドコモmini'; docomoBase = (giga <= 4) ? 2750 : 3850;
             if (cardType === 'd-gold') docomoDiscount += 550;
             if (cardType === 'd-silver') docomoDiscount += 220;
             if (hasNet) docomoDiscount += 1210;
             if (hasDenki) docomoDiscount += 110;
-            docomoRecommend = 'ライトユーザー向けのコンパクトなプランです。';
+            docomoRecommend = 'ライト利用に';
         } else {
             if ((ageLimit === 'u18' || ageLimit === 'u22') && giga <= 30) {
-                docomoPlanName = 'ドコモ (ドコモMAX U22特別)'; docomoBase = 6798;
+                docomoPlanName = 'ドコモ U22特'; docomoBase = 6798;
                 if (cardType === 'd-gold') docomoDiscount += 550; if (cardType === 'd-silver') docomoDiscount += 220;
                 if (hasNet) docomoDiscount += 1210; if (familyLines >= 3) docomoDiscount += 1210;
-                docomoDiscount += 3838; periodDiscountText = '（※最初の7ヶ月間。8ヶ月目以降+3,838円）';
-                docomoRecommend = '若者限定！30GBまで破格の安さで使える特別プランです。';
+                docomoDiscount += 3838;
+                docomoRecommend = '若者限定で格安！';
             } else {
-                docomoPlanName = 'ドコモ (ドコモMAX)'; docomoBase = 8448;
+                docomoPlanName = 'ドコモMAX'; docomoBase = 8448;
                 if (cardType === 'd-gold') docomoDiscount += 550; if (cardType === 'd-silver') docomoDiscount += 220;
                 if (hasNet) docomoDiscount += 1210;
                 if (familyLines === 2) docomoDiscount += 550; if (familyLines >= 3) docomoDiscount += 1210;
-                if (ageLimit === 'u29') {
+                if (ageLimit === 'u29' || ageLimit === 'u18' || ageLimit === 'u22') {
                     docomoDiscount += 3838;
-                    periodDiscountText = '（※最初の3ヶ月間。4ヶ月目以降+3,838円）';
-                    docomoRecommend = '29歳以下特典適用中！最初の3ヶ月間が超お得になります。';
-                } else if (ageLimit === 'u18' || ageLimit === 'u22') {
-                    docomoDiscount += 3838; periodDiscountText = '（※最初の3ヶ月間。4ヶ月目以降+3,838円）';
-                    docomoRecommend = '30GB超過のため無制限モード。U22特典で3ヶ月間大幅割引！';
+                    docomoRecommend = '今だけ大特価！';
                 } else {
-                    docomoRecommend = 'DAZNが無料で付いてくるからスポーツ観戦が好きな人におすすめ！';
+                    docomoRecommend = 'DAZN特典つき';
                 }
             }
             if (hasDenki) docomoDiscount += 110;
         }
         let docomoFinalPrice = docomoBase - docomoDiscount + docomoCall;
-        if (docomoFinalPrice < 0) docomoFinalPrice = 0;
-        results.push({ name: docomoPlanName, price: docomoFinalPrice, class: 'docomo', detail: `定価: ${docomoBase}円 / 割引: -${docomoDiscount}円 / 通話: +${docomoCall}円 ${periodDiscountText}`, recommend: docomoRecommend });
-
+        results.push({ name: docomoPlanName, price: Math.max(0, docomoFinalPrice), class: 'docomo', detail: `基本: ${docomoBase}円<br>割引: -${docomoDiscount}円`, recommend: docomoRecommend });
 
         /* ====================================================
            💡 2. ahamo
            ==================================================== */
         let ahamoBase = (giga <= 30) ? 2970 : 4950;
         let ahamoCall = (callOption === 'unlimited') ? 1100 : 0;
-        results.push({ name: 'ahamo (アハモ)', price: ahamoBase + ahamoCall, class: 'ahamo', detail: `定価(5分無料込): ${ahamoBase}円 / かけ放題化: +${ahamoCall}円`, recommend: 'オンライン限定プラン。標準で5分以内の国内通話が無料！' });
-
+        results.push({ name: 'ahamo', price: ahamoBase + ahamoCall, class: 'ahamo', detail: `5分無料込み<br>追加通話: +${ahamoCall}円`, recommend: 'シンプルで大人気' });
 
         /* ====================================================
            💡 3. au
@@ -369,143 +456,88 @@
         let auPlanName = ''; let auBase = 0; let auDiscount = 0; let auCall = 0; let auRecommend = '';
 
         if (ageLimit === 'u18' && giga <= 20) {
-            auPlanName = 'au (U18プラン)';
-            auBase = (giga <= 3) ? 2398 : 4048;
+            auPlanName = 'au U18プラン'; auBase = (giga <= 3) ? 2398 : 4048;
             if (cardType === 'au-pay') auDiscount += 220;
             if (hasNet) auDiscount += 550; 
-            if (familyLines === 2) auDiscount += 220; 
-            if (familyLines >= 3) auDiscount += 550;  
+            if (familyLines === 2) auDiscount += 220; if (familyLines >= 3) auDiscount += 550;  
             auCall = (callOption === '5min') ? 880 : (callOption === 'unlimited' ? 1980 : 0);
-            auRecommend = '18歳以下限定プラン！割引を適用すれば少容量から中容量まで大変お得です。';
-        }
-        else if (ageLimit === 'o60' && giga <= 5) {
-            auPlanName = 'au (60歳以上限定プラン)'; auBase = 4048;
+            auRecommend = '18歳以下に最適';
+        } else if (ageLimit === 'o60' && giga <= 5) {
+            auPlanName = 'au 60歳以上限定'; auBase = 4048;
             if (cardType === 'au-pay') auDiscount += 220; if (hasNet) auDiscount += 1100;
             if (callOption === 'none' || callOption === '5min') { auCall = 0; } else if (callOption === 'unlimited') { auCall = 1100; }
-            auRecommend = '60歳以上限定！5分以内の国内通話が何度でも無料で、シニアに最適なプランです。';
-        } 
-        else {
-            auPlanName = 'au (バリューリンクプラン)'; auBase = (giga <= 1) ? 6358 : 8008;
+            auRecommend = 'シニア向け5分無料';
+        } else {
+            auPlanName = 'au バリューリンク'; auBase = (giga <= 1) ? 6358 : 8008;
             if (cardType === 'au-pay') auDiscount += 220; if (hasNet) auDiscount += 1210;
             if (familyLines === 2) auDiscount += 660; if (familyLines >= 3) auDiscount += 1210;
             auCall = (callOption === '5min') ? 880 : (callOption === 'unlimited' ? 1980 : 0);
-            auRecommend = 'Pontaパスが無料でついてくる！よくローソンやクーポンを使う方におすすめ。';
+            auRecommend = 'Pontaパス付き';
         }
-
-        let auFinalPrice = auBase - auDiscount + auCall;
-        if (auFinalPrice < 0) auFinalPrice = 0;
-        results.push({ name: auPlanName, price: auFinalPrice, class: 'au', detail: `定価: ${auBase}円 / 割引: -${auDiscount}円 / 通話: +${auCall}円`, recommend: auRecommend });
-
+        results.push({ name: auPlanName, price: Math.max(0, auBase - auDiscount + auCall), class: 'au', detail: `基本: ${auBase}円<br>割引: -${auDiscount}円`, recommend: auRecommend });
 
         /* ====================================================
            💡 4. UQモバイル
            ==================================================== */
         if (giga <= 35) {
-            let uqTokutokuBase = (giga <= 5) ? 2948 : 4048;
-            let uqTokutokuDiscount = 0;
+            let uqTokutokuBase = (giga <= 5) ? 2948 : 4048; let uqTokutokuDiscount = 0;
             if (cardType === 'au-pay') uqTokutokuDiscount += 220;
             if (hasNet) { uqTokutokuDiscount += 1100; } else if (familyLines >= 2) { uqTokutokuDiscount += 550; }
-            let uqTokutokuCall = (callOption === '5min') ? 880 : (callOption === 'unlimited' ? 1980 : 0);
-            let uqTokutokuPrice = uqTokutokuBase - uqTokutokuDiscount + uqTokutokuCall;
+            let uqTokutokuPrice = uqTokutokuBase - uqTokutokuDiscount + ((callOption === '5min') ? 880 : (callOption === 'unlimited' ? 1980 : 0));
 
-            let uqComicomiBase = 3828;
-            let uqComicomiCall = (callOption === 'unlimited') ? 1100 : 0;
+            let uqComicomiBase = 3828; let uqComicomiCall = (callOption === 'unlimited') ? 1100 : 0;
             let uqComicomiPrice = uqComicomiBase + uqComicomiCall;
 
-            let uqFinalPrice = 0; let uqPlanName = ''; let uqDetail = ''; let uqRecommend = '';
-
             if (uqComicomiPrice < uqTokutokuPrice || giga > 30) {
-                uqPlanName = 'UQモバイル (コミコミプランバリュー)'; uqFinalPrice = uqComicomiPrice;
-                uqDetail = `定価(10分無料込): ${uqComicomiBase}円 / かけ放題化: +${uqComicomiCall}円`;
-                uqRecommend = '10分国内通話無料＆Pontaパス付き！35GB使えるシンプルでお得なプランです。';
+                results.push({ name: 'UQコミコミバリュー', price: uqComicomiPrice, class: 'uq', detail: `10分無料込み<br>35GBまで`, recommend: '通話もギガもお得' });
             } else {
-                uqPlanName = 'UQモバイル (トクトクプラン)'; uqFinalPrice = uqTokutokuPrice;
-                uqDetail = `定価: ${uqTokutokuBase}円 / 割引: -${uqTokutokuDiscount}円 / 通話: +${uqTokutokuCall}円`;
-                uqRecommend = '中容量で高品質。ネット光回線セット割を組むと非常に安くなります！';
+                results.push({ name: 'UQトクトク', price: Math.max(0, uqTokutokuPrice), class: 'uq', detail: `ネット割がお得<br>中容量向け`, recommend: '高品質で安い' });
             }
-            if (uqFinalPrice < 0) uqFinalPrice = 0;
-            results.push({ name: uqPlanName, price: uqFinalPrice, class: 'uq', detail: uqDetail, recommend: uqRecommend });
         }
-
 
         /* ====================================================
            💡 5. ソフトバンク
            ==================================================== */
         let sbDiscount = 0;
-        if (cardType === 'paypay-gold') sbDiscount += 550;
-        if (cardType === 'paypay-normal') sbDiscount += 330;
-        if (hasNet) sbDiscount += 1100;
-        if (familyLines === 2) sbDiscount += 660;
-        if (familyLines >= 3) sbDiscount += 1210;
-
+        if (cardType === 'paypay-gold') sbDiscount += 550; if (cardType === 'paypay-normal') sbDiscount += 330;
+        if (hasNet) sbDiscount += 1100; if (familyLines === 2) sbDiscount += 660; if (familyLines >= 3) sbDiscount += 1210;
         let sbCall = (callOption === '5min') ? 880 : (callOption === 'unlimited' ? 1980 : 0);
-        let sbUnlimitedPrice = 8008 - sbDiscount + sbCall;
 
-        let sbMinifitBase = (giga <= 2) ? 5258 : 6358;
-        let sbMinifitPrice = sbMinifitBase - sbDiscount + sbCall;
-
-        let sbFinalPrice = 0; let sbPlanName = ''; let sbDetail = ''; let sbRecommend = '';
-
-        if (giga <= 5 && sbMinifitPrice < sbUnlimitedPrice) {
-            sbPlanName = 'ソフトバンク (ミニフィット2)'; sbFinalPrice = sbMinifitPrice;
-            sbDetail = `定価: ${sbMinifitBase}円 / 割引: -${sbDiscount}円 / 通話: +${sbCall}円`;
-            sbRecommend = 'あまりギガを使わない月向けの小容量ステップ型プランです。';
+        if (giga <= 5 && (5258 - sbDiscount + sbCall) < (8008 - sbDiscount + sbCall)) {
+            results.push({ name: 'SBミニフィット2', price: Math.max(0, 5258 - sbDiscount + sbCall), class: 'softbank', detail: `小容量プラン<br>割引: -${sbDiscount}円`, recommend: '使わない月向け' });
         } else {
-            sbPlanName = 'ソフトバンク (テイガク無制限)'; sbFinalPrice = sbUnlimitedPrice;
-            sbDetail = `定価: 8008円 / 割引: -${sbDiscount}円 / 通話: +${sbCall}円`;
-            sbRecommend = 'データ容量を気にせず使い放題！PayPayカードや光回線セットがお得。';
+            results.push({ name: 'SBテイガク無制限', price: Math.max(0, 8008 - sbDiscount + sbCall), class: 'softbank', detail: `無制限使い放題<br>割引: -${sbDiscount}円`, recommend: 'ギガ完全無制限' });
         }
-        if (sbFinalPrice < 0) sbFinalPrice = 0;
-        results.push({ name: sbPlanName, price: sbFinalPrice, class: 'softbank', detail: sbDetail, recommend: sbRecommend });
-
 
         /* ====================================================
            💡 6. Y!mobile
            ==================================================== */
         if (giga <= 35) {
-            let ymPlanName = ''; let ymBase = 0; let ymDiscount = 0; let ymRecommend = '';
-
-            if (cardType === 'paypay-gold') ymDiscount += 770;
-            if (cardType === 'paypay-normal') ymDiscount += 550;
+            let ymBase = (giga <= 5) ? 3278 : ((giga <= 30) ? 4378 : 5478);
+            let ymDiscount = 0;
+            if (cardType === 'paypay-gold') ymDiscount += 770; if (cardType === 'paypay-normal') ymDiscount += 550;
             if (hasNet) { ymDiscount += 1650; } else if (familyLines >= 2) { ymDiscount += 1100; }
-
-            if (giga <= 5) {
-                ymPlanName = 'Y!mobile (シンプルS)'; ymBase = 3278;
-                ymRecommend = 'ライトユーザー向け。PayPayカード割や光割で一気に安くなります！';
-            } else if (giga <= 30) {
-                ymPlanName = 'Y!mobile (シンプルM)'; ymBase = 4378;
-                ymRecommend = '動画もSNSもたっぷり楽しめる、一番人気のミドル容量プランです。';
-            } else {
-                ymPlanName = 'Y!mobile (シンプルL)'; ymBase = 5478;
-                ymRecommend = '大容量35GBプラン。速度制限を気にせずたっぷり使いたい方に。';
-            }
-
             let ymCall = (callOption === '5min') ? 880 : (callOption === 'unlimited' ? 1980 : 0);
-            let ymFinalPrice = ymBase - ymDiscount + ymCall;
-            if (ymFinalPrice < 0) ymFinalPrice = 0;
-            results.push({ name: ymPlanName, price: ymFinalPrice, class: 'ymobile', detail: `定価: ${ymBase}円 / 割引: -${ymDiscount}円 / 通話: +${ymCall}円`, recommend: ymRecommend });
+            results.push({ name: 'Y!mobile', price: Math.max(0, ymBase - ymDiscount + ymCall), class: 'ymobile', detail: `基本: ${ymBase}円<br>割引: -${ymDiscount}円`, recommend: 'PayPayが貯まる' });
         }
 
-        // 料金の安い順に並び替え
+        // 料金順ソート
         results.sort((a, b) => a.price - b.price);
 
-        // 結果描画
+        // ボトルコレクションとして描画
         const resultsList = document.getElementById('results-list');
         resultsList.innerHTML = '';
 
         results.forEach(item => {
-            const card = document.createElement('div');
-            card.className = `result-card ${item.class}`;
-            let recommendHtml = item.recommend ? `<div class="recommend-tag">👑 ${item.recommend}</div>` : '';
-            card.innerHTML = `
-                <div>
-                    <div class="brand-name">${item.name}</div>
-                    <div class="details">${item.detail}</div>
-                    ${recommendHtml}
-                </div>
-                <div class="price">¥${item.price.toLocaleString()}</div>
+            const bottle = document.createElement('div');
+            bottle.className = `pendant-bottle ${item.class}`;
+            bottle.innerHTML = `
+                <div class="bottle-brand">${item.name}</div>
+                <div class="bottle-price">¥${item.price.toLocaleString()}<span></span></div>
+                <div class="bottle-detail">${item.detail}</div>
+                <div class="bottle-tag">${item.recommend}</div>
             `;
-            resultsList.appendChild(card);
+            resultsList.appendChild(bottle);
         });
 
         document.getElementById('results-area').style.display = 'block';
