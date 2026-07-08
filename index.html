@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>プリンセス スマホ料金シミュレーター</title>
+    <title>スマホ料金シュミレーター</title>
     <style>
         /* --- 全体の世界観（背景とベース） --- */
         body {
@@ -200,14 +200,15 @@
             box-shadow: 0 10px 30px rgba(244, 124, 150, 0.6);
         }
 
-        /* --- 下段：結果表示エリア --- */
+        /* --- 下段：おすすめプラン表示エリア --- */
         .showcase {
             display: none;
             background: linear-gradient(to bottom, #fff5f6, #fae1e5);
             border-radius: 24px;
-            padding: 25px 15px;
+            padding: 25px 15px 40px 15px;
             border-top: 5px solid #e0b0ba;
             box-shadow: inset 0 10px 20px rgba(0,0,0,0.05);
+            position: relative;
         }
         .showcase h2 {
             font-size: 15px;
@@ -225,18 +226,18 @@
             gap: 15px;
         }
 
-        /* ボトルデザインベース（aタグに変更して全体をクリック可能に） */
+        /* ボトルデザインベース */
         .pendant-bottle {
             background: #ffffff;
             border: 2px solid #fcd2dc;
             border-radius: 18px 18px 25px 25px;
-            padding: 45px 10px 15px 10px; /* 上部にリボン＆順位用スペース */
+            padding: 45px 10px 15px 10px;
             position: relative;
             text-align: center;
             box-shadow: 0 8px 20px rgba(235, 175, 188, 0.3);
             transition: transform 0.3s, box-shadow 0.3s;
-            text-decoration: none; /* リンクの下線を消す */
-            display: block; /* 全体をクリック可能に */
+            text-decoration: none;
+            display: block;
         }
         .pendant-bottle:hover {
             transform: translateY(-8px);
@@ -254,7 +255,7 @@
             filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
         }
 
-        /* 新設：ジュエリー風の順位バッジ */
+        /* ジュエリー風の順位バッジ */
         .bottle-rank {
             position: absolute;
             top: 22px;
@@ -263,13 +264,12 @@
             font-size: 11px;
             font-weight: bold;
             color: #ffffff;
-            background: linear-gradient(135deg, #d4af37 0%, #f3e5ab 50%, #aa7c11 100%); /* ゴールド風グラデ */
+            background: linear-gradient(135deg, #d4af37 0%, #f3e5ab 50%, #aa7c11 100%);
             padding: 2px 8px;
             border-radius: 10px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.15);
             white-space: nowrap;
         }
-        /* 1位だけさらに特別感のあるピンクゴールドに */
         .pendant-bottle:first-child .bottle-rank {
             background: linear-gradient(135deg, #ff69b4 0%, #ffb6c1 50%, #db7093 100%);
             box-shadow: 0 2px 8px rgba(255, 105, 180, 0.4);
@@ -327,13 +327,25 @@
             border-radius: 20px;
             display: inline-block;
         }
+
+        /* 結果エリアの右下に配置する薄めの注釈文言 */
+        .showcase-notice {
+            position: absolute;
+            bottom: 12px;
+            right: 20px;
+            font-size: 11px;
+            color: #a3858c;
+            opacity: 0.8;
+            font-weight: normal;
+            letter-spacing: 0.5px;
+        }
     </style>
 </head>
 <body>
 
 <div class="jewelry-box">
     <div class="tiara-header">
-        <h1>プリンセス スマホ料金シミュレーター</h1>
+        <h1>スマホ料金シュミレーター</h1>
     </div>
     
     <!-- 上段：インプットエリア（キルティング調トレイ） -->
@@ -410,10 +422,12 @@
         <button class="magic-btn" onclick="calculateRates()">料金を調べる ✨</button>
     </div>
     
-    <!-- 下段：結果表示エリア（宝石箱のショーケース） -->
+    <!-- 下段：おすすめプラン表示エリア（宝石箱のショーケース） -->
     <div class="showcase" id="results-area">
         <h2>📊 ジュエリーボトル・プランコレクション（月額/税込）</h2>
         <div class="bottle-grid" id="results-list"></div>
+        <!-- 注釈文言 -->
+        <div class="showcase-notice">おすすめプランを押すと公式サイトに飛びます✨</div>
     </div>
 </div>
 
@@ -434,7 +448,7 @@
         let results = [];
 
         /* ====================================================
-           💡 1. ドコモ (リンク: https://www.docomo.ne.jp/)
+           💡 1. ドコモ
            ==================================================== */
         let docomoPlanName = ''; let docomoBase = 0; let docomoDiscount = 0; let docomoRecommend = '';
         let docomoCall = (callOption === '5min') ? 880 : (callOption === 'unlimited' ? 1980 : 0);
@@ -471,14 +485,14 @@
         results.push({ name: docomoPlanName, price: Math.max(0, docomoFinalPrice), class: 'docomo', detail: `基本: ${docomoBase}円<br>割引: -${docomoDiscount}円`, recommend: docomoRecommend, url: 'https://www.docomo.ne.jp/' });
 
         /* ====================================================
-           💡 2. ahamo (リンク: https://ahamo.com/)
+           💡 2. ahamo
            ==================================================== */
         let ahamoBase = (giga <= 30) ? 2970 : 4950;
         let ahamoCall = (callOption === 'unlimited') ? 1100 : 0;
         results.push({ name: 'ahamo', price: ahamoBase + ahamoCall, class: 'ahamo', detail: `5分無料込み<br>追加通話: +${ahamoCall}円`, recommend: 'シンプルで大人気', url: 'https://ahamo.com/' });
 
         /* ====================================================
-           💡 3. au (リンク: https://www.au.com/)
+           💡 3. au
            ==================================================== */
         let auPlanName = ''; let auBase = 0; let auDiscount = 0; let auCall = 0; let auRecommend = '';
 
@@ -504,7 +518,7 @@
         results.push({ name: auPlanName, price: Math.max(0, auBase - auDiscount + auCall), class: 'au', detail: `基本: ${auBase}円<br>割引: -${auDiscount}円`, recommend: auRecommend, url: 'https://www.au.com/' });
 
         /* ====================================================
-           💡 4. UQモバイル (リンク: https://www.uqwimax.jp/)
+           💡 4. UQモバイル
            ==================================================== */
         if (giga <= 35) {
             let uqTokutokuBase = (giga <= 5) ? 2948 : 4048; let uqTokutokuDiscount = 0;
@@ -523,7 +537,7 @@
         }
 
         /* ====================================================
-           💡 5. ソフトバンク (リンク: https://www.softbank.jp/)
+           💡 5. ソフトバンク
            ==================================================== */
         let sbDiscount = 0;
         if (cardType === 'paypay-gold') sbDiscount += 550; if (cardType === 'paypay-normal') sbDiscount += 330;
@@ -537,7 +551,7 @@
         }
 
         /* ====================================================
-           💡 6. Y!mobile (リンク: https://www.ymobile.jp/)
+           💡 6. Y!mobile
            ==================================================== */
         if (giga <= 35) {
             let ymBase = (giga <= 5) ? 3278 : ((giga <= 30) ? 4378 : 5478);
@@ -548,7 +562,7 @@
             results.push({ name: 'Y!mobile', price: Math.max(0, ymBase - ymDiscount + ymCall), class: 'ymobile', detail: `基本: ${ymBase}円<br>割引: -${ymDiscount}円`, recommend: 'PayPayが貯まる', url: 'https://www.ymobile.jp/' });
         }
 
-        // 料金の安い順にソート（最安値が第1位になります）
+        // 料金の安い順にソート
         results.sort((a, b) => a.price - b.price);
 
         // ボトルコレクションとして描画
@@ -556,7 +570,6 @@
         resultsList.innerHTML = '';
 
         results.forEach((item, index) => {
-            // aタグとしてボトルを生成。hrefに各社のURLを設定して別タブ(target="_blank")で開く
             const bottle = document.createElement('a');
             bottle.href = item.url;
             bottle.target = "_blank";
