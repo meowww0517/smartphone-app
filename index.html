@@ -513,13 +513,24 @@
            ==================================================== */
         if (giga <= 35) {
             let uqTokutokuBase = (giga <= 5) ? 2948 : 4048; let uqTokutokuDiscount = 0;
+            let uqDiscountTypeLabel = 'なし'; // 画面表示用のラベル
+            
             if (cardType === 'au-pay') uqTokutokuDiscount += 220;
             
-            // 【修正箇所】光割(hasNet) または でんき割(hasDenki)のどちらか片方でもONなら、同等の割引(1100円)を適用。両方ONでも重複しない。
+            // 光割 または でんき割のどちらか片方でもONなら、同等の割引(1100円)を適用。両方ONでも重複しない。
             if (hasNet || hasDenki) { 
-                uqTokutokuDiscount += 1100; 
+                uqTokutokuDiscount += 1100;
+                // 画面用の割引表記テキストを設定
+                if (hasNet && hasDenki) {
+                    uqDiscountTypeLabel = 'セット割(でんき重複)';
+                } else if (hasNet) {
+                    uqDiscountTypeLabel = '自宅セット割';
+                } else {
+                    uqDiscountTypeLabel = 'でんき割';
+                }
             } else if (familyLines >= 2) { 
                 uqTokutokuDiscount += 550; 
+                uqDiscountTypeLabel = '家族割';
             }
             
             let uqTokutokuPrice = uqTokutokuBase - uqTokutokuDiscount + ((callOption === '5min') ? 880 : (callOption === 'unlimited' ? 1980 : 0));
@@ -530,7 +541,8 @@
             if (uqComicomiPrice < uqTokutokuPrice || giga > 30) {
                 results.push({ name: 'UQコミコミバリュー', price: uqComicomiPrice, class: 'uq', detail: `10分無料込み<br>35GBまで`, recommend: '通話もギガもお得', url: 'https://www.uqwimax.jp/mobile/' });
             } else {
-                results.push({ name: 'UQトクトク', price: Math.max(0, uqTokutokuPrice), class: 'uq', detail: `セット割がお得<br>中容量向け`, recommend: '高品質で安い', url: 'https://www.uqwimax.jp/mobile/' });
+                // 【修正箇所】detailプロパティに、適用された割引タイプ(uqDiscountTypeLabel)と、合計割引額を表示するようにしました。
+                results.push({ name: 'UQトクトク', price: Math.max(0, uqTokutokuPrice), class: 'uq', detail: `基本: ${uqTokutokuBase}円<br>割引(${uqDiscountTypeLabel}): -${uqTokutokuDiscount}円`, recommend: '高品質で安い', url: 'https://www.uqwimax.jp/mobile/' });
             }
         }
 
