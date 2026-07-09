@@ -348,10 +348,8 @@
         <h1>スマホ料金シュミレーター</h1>
     </div>
     
-    <!-- 上段：インプットエリア（キルティング調トレイ） -->
     <div class="input-tray">
         
-        <!-- 1. ギガ数選択 -->
         <div class="tray-item full-width">
             <label>💖 1ヶ月に必要なデータ通信量</label>
             <div class="giga-wrapper">
@@ -363,7 +361,6 @@
             </div>
         </div>
         
-        <!-- 2. 年齢選択 -->
         <div class="tray-item">
             <label>🎂 契約者の年齢</label>
             <select id="age-limit">
@@ -375,7 +372,6 @@
             </select>
         </div>
         
-        <!-- 3. 通話オプション -->
         <div class="tray-item">
             <label>📞 通話オプション（かけ放題）</label>
             <select id="call">
@@ -385,7 +381,6 @@
             </select>
         </div>
 
-        <!-- 4. 詳細な割引条件 -->
         <div class="tray-item">
             <label>👥 家族の回線数</label>
             <select id="family-lines">
@@ -407,7 +402,6 @@
             </select>
         </div>
 
-        <!-- 5. セット割チェック -->
         <div class="tray-item full-width">
             <label>💎 適用可能なセット割引</label>
             <div class="checkbox-list">
@@ -417,16 +411,13 @@
         </div>
     </div>
     
-    <!-- 魔法をかけるボタン -->
     <div class="magic-button-wrapper">
         <button class="magic-btn" onclick="calculateRates()">料金を調べる ✨</button>
     </div>
     
-    <!-- 下段：おすすめプラン表示エリア（宝石箱のショーケース） -->
     <div class="showcase" id="results-area">
         <h2>📊 おすすめプラン（月額/税込）</h2>
         <div class="bottle-grid" id="results-list"></div>
-        <!-- 注釈文言 -->
         <div class="showcase-notice">おすすめプランを押すと公式サイトに飛びます✨</div>
     </div>
 </div>
@@ -523,7 +514,14 @@
         if (giga <= 35) {
             let uqTokutokuBase = (giga <= 5) ? 2948 : 4048; let uqTokutokuDiscount = 0;
             if (cardType === 'au-pay') uqTokutokuDiscount += 220;
-            if (hasNet) { uqTokutokuDiscount += 1100; } else if (familyLines >= 2) { uqTokutokuDiscount += 550; }
+            
+            // 【修正箇所】光割(hasNet) または でんき割(hasDenki)のどちらか片方でもONなら、同等の割引(1100円)を適用。両方ONでも重複しない。
+            if (hasNet || hasDenki) { 
+                uqTokutokuDiscount += 1100; 
+            } else if (familyLines >= 2) { 
+                uqTokutokuDiscount += 550; 
+            }
+            
             let uqTokutokuPrice = uqTokutokuBase - uqTokutokuDiscount + ((callOption === '5min') ? 880 : (callOption === 'unlimited' ? 1980 : 0));
 
             let uqComicomiBase = 3828; let uqComicomiCall = (callOption === 'unlimited') ? 1100 : 0;
@@ -532,7 +530,7 @@
             if (uqComicomiPrice < uqTokutokuPrice || giga > 30) {
                 results.push({ name: 'UQコミコミバリュー', price: uqComicomiPrice, class: 'uq', detail: `10分無料込み<br>35GBまで`, recommend: '通話もギガもお得', url: 'https://www.uqwimax.jp/mobile/' });
             } else {
-                results.push({ name: 'UQトクトク', price: Math.max(0, uqTokutokuPrice), class: 'uq', detail: `ネット割がお得<br>中容量向け`, recommend: '高品質で安い', url: 'https://www.uqwimax.jp/mobile/' });
+                results.push({ name: 'UQトクトク', price: Math.max(0, uqTokutokuPrice), class: 'uq', detail: `セット割がお得<br>中容量向け`, recommend: '高品質で安い', url: 'https://www.uqwimax.jp/mobile/' });
             }
         }
 
